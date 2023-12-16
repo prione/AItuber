@@ -1,5 +1,9 @@
 # AItuber
 AItuber with ChatGPT
+AIで生成したイラストをAIで動かし、AIで設定したキャラクターがAIによって喋ったりゲームしたりする。全てがAIのAItuberを目指しています。
+
+ChatBotにはChatGPT, アバターにはEasyVtuber(https://github.com/yuyuyzl/EasyVtuber)を使用
+*EasyVtuberは一枚のイラストを動かすtalking-head-anime-3をOBSの配信向けに拡張したものです。
 
 # DEMO
 [![alt設定](http://img.youtube.com/vi/yQO-JehapRA/0.jpg)](https://www.youtube.com/watch?v=yQO-JehapRA)
@@ -8,7 +12,8 @@ AItuber with ChatGPT
 pip install -r requirements.txt
 
 # Usage
-1. "python main.py" コマンドで起動
-2. 音源を選択
-3. 🎤
-
+run.batを起動
+1 (DEBUG): テストモード。アバターの出力先がGUIウィンドウになります。コマンドラインを通じてChatBotに入力をします。
+2 (OBS): 配信モード。アバターの出力先が仮想カメラになります。また、Youtubeライブ配信をChatBotの入力として取り込みます。
+3 (Only Language): テストモード。ChatBotモジュールだけを起動します。
+4 (Only Avator):  テストモード。アバターモジュールだけを起動します。
