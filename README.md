@@ -7,7 +7,7 @@ ChatBotにはChatGPT, 合成音声にはVOICEVOX, アバターにはEasyVtuber( 
 *EasyVtuberは一枚のイラストを動かすtalking-head-anime-3をOBSの配信向けに拡張したものです。
 
 # DEMO
-[![alt設定](http://img.youtube.com/vi/yQO-JehapRA/0.jpg)](https://www.youtube.com/watch?v=yQO-JehapRA)
+[![alt設定](http://img.youtube.com/vi/TCTUUorWVzk/0.jpg)](https://www.youtube.com/watch?v=TCTUUorWVzk)
 
 # Installation
 ### 必要ライブラリ
