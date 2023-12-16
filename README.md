@@ -2,7 +2,7 @@
 AItuber with ChatGPT
 AIで生成したイラストをAIで動かし、AIで設定したキャラクターがAIによって喋ったりゲームしたりする。全てがAIのAItuberを目指しています。
 
-ChatBotにはChatGPT, 合成音声にはVOICEVOX, アバターにはEasyVtuber(https://github.com/yuyuyzl/EasyVtuber)を使用しています。
+ChatBotにはChatGPT, 合成音声にはVOICEVOX, アバターにはEasyVtuber( https://github.com/yuyuyzl/EasyVtuber )を使用しています。
 
 *EasyVtuberは一枚のイラストを動かすtalking-head-anime-3をOBSの配信向けに拡張したものです。
 
