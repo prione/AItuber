@@ -323,7 +323,7 @@ def main():
 
     blink = False
     blink_frame = 0
-    temp_path = f"{os.getcwd()}/Temp"
+    temp_path = f"{os.path.dirname(__file__)}/../Temp"
 
     while True:
 

@@ -8,3 +8,5 @@ opencv_python
 Pillow
 pyanime4k
 pyvirtualcam
+pytchat
+openai

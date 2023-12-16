@@ -14,36 +14,34 @@ class bot():
       system_settings = f.read()
       self.system_prompt = [{"role": "system", "content": system_settings}]
 
+    self.log =[]
     self.memory_path = f"{os.path.dirname(__file__)}/memory"
     if load_memory:
-      with open(f"{self.memory_path}/log.json", encoding="SHIFT_JIS") as f:
-        self.log = json.load(f)
-    else:
-      self.log =[]
+      if os.path.exists(f"{self.memory_path}/log.json"):
+        with open(f"{self.memory_path}/log.json", encoding="SHIFT_JIS") as f:
+          self.log = json.load(f)
 
     self.do_memorory = do_memorory
     self.do_save = do_save
 
-    self.tools = [
-      {
-        "type": "function",
-        "function": {
-          "name": "get_emotion",
-          "description": "気持ちを出力します",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "emotion": {
-                "type": "string", 
-                "description": "あなたの気持ちです。通常・喜び・悲しみ・恐怖のいずれか一つを選択してください",
-              },
-            },
-          },
-        },
-      }
-    ]
-
-
+    # self.tools = [
+    #   {
+    #     "type": "function",
+    #     "function": {
+    #       "name": "get_emotion",
+    #       "description": "気持ちを出力します",
+    #       "parameters": {
+    #         "type": "object",
+    #         "properties": {
+    #           "emotion": {
+    #             "type": "string", 
+    #             "description": "あなたの気持ちです。通常・喜び・悲しみ・恐怖のいずれか一つを選択してください",
+    #           },
+    #         },
+    #       },
+    #     },
+    #   }
+    # ]
 
   def reply(self, input):
 
@@ -52,10 +50,6 @@ class bot():
     response = self.client.chat.completions.create(
       model="gpt-3.5-turbo",
       messages=prompt,
-      # functions=self.tools,
-      # function_call={"name": "get_emotion"},
-      # tools=self.tools,
-      # tool_choice={"name": "get_emotion"},
       max_tokens=1024,
       temperature=1,
       top_p=1,
@@ -64,37 +58,12 @@ class bot():
       stream=True
     )
 
-    # response_message = response.choices[0].message
-    # tool_calls = response_message.tool_calls
-
-    # if tool_calls:
-    #     for tool_call in tool_calls:
-    #         function_name = tool_call.function.name
-    #         function_args = json.loads(tool_call.function.arguments)
-    #         emotion=function_args.get("emotion"),
-    #         messages.append(
-    #             {
-    #                 "tool_call_id": tool_call.id,
-    #                 "role": "tool",
-    #                 "name": function_name,
-    #                 "content": emotion,
-    #             }
-    #         ) 
-
     message = ""
     for chunk in response:
       if chunk.choices[0].delta.content is not None:
         content = chunk.choices[0].delta.content
         message += content 
         yield content
-
-      # if chunk.choices[0].delta.function_call is not None:
-      #   try:
-      #     yield json.loads(a)
-      #   except:
-      #     try:
-      #       json.loads(a)
-      #   content = chunk.choices[0].delta.function_call.arguments 
 
     if self.do_memorory:
       self.memorize(input, message)
@@ -109,7 +78,7 @@ class bot():
     prompt = copy.copy(self.system_prompt)
 
     if self.log:
-      simiar_log = self.similarity_search(input, threshold=0.7, top_k=5)
+      simiar_log = self.similarity_search(input, threshold=0.7, top_k=2)
 
       for log  in simiar_log:
         prompt.append({"role": "user", "content": log["user"]})

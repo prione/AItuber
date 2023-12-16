@@ -14,16 +14,19 @@ from chatbot import bot
 temp_path = f"{os.path.dirname(__file__)}/../Temp"
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--debug', action='store_true', default='true')
+parser.add_argument('--debug', action='store_true')
 parser.add_argument('--voice', action='store_true')
 parser.add_argument('--game', action='store_true')
 parser.add_argument('--load_memory', action='store_true')
+# video_idはhttps://....watch?v=より後ろのやつ
+parser.add_argument('--video_id')
 
 args = parser.parse_args()
 
 textQ = queue.Queue()
 text_to_voiceQ = queue.Queue()
 voiceQ = queue.Queue()
+commentQ = queue.Queue()
 
 def generate_text():
 
@@ -50,8 +53,7 @@ def generate_text():
         textQ.queue.clear()
 
         if args.debug == False:
-          with open(f"{temp_path}/comment.txt", 'w', encoding='UTF-8') as f:
-            f.write("")
+          commentQ.queue.clear()
 
       if args.debug:
         input_message = input("あなた: ")
@@ -60,30 +62,25 @@ def generate_text():
           input_message = blank
 
       else:
-        input_message = ""
-
-        if os.path.isfile(f"{temp_path}/comment.txt"):
-          with open(f"{temp_path}/comment.txt", 'r', encoding='UTF-8', newline='\n') as f:
-            lines = f.readlines()
-
-          if lines: # linesが空でなければ
-            input_message = lines[0].strip()  
-            new_lines = [line for line in lines if line.strip() != input_message]
-
-            with open(f"{temp_path}/comment.txt", 'w', encoding='UTF-8', newline='\n') as f:
-              f.writelines(new_lines)
-
-          if input_message.isspace() or input_message == "":
-            input_message = blank
+        while commentQ.qsize() == 0:
+          if not os.path.isfile(f"{temp_path}/thinking") and len(glob.glob(f"{temp_path}/*.wav")) == 0:
+            for i in range(8):
+              time.sleep(i)
+              if i == 7:
+                # 一人ごちモード
+                commentQ.put(blank)
+          else:
+            pass
+          
+        input_message = commentQ.get()
 
       text_to_Q(chat, blank, input_message)
 
 
-def text_to_Q(chat, blank,input_message):
+def text_to_Q(chat, blank, input_message):
   textQ.put(input_message)
-  
-  if not (input_message == blank or input_message.isspace() ):
-    text_to_voiceQ.put("【入力】"+input_message)
+  if not (input_message == blank or input_message.isspace()):
+    text_to_voiceQ.put("【入力】" + input_message)
 
   textQ_to_voiceQ(chat)
 
@@ -112,6 +109,7 @@ def textQ_to_voiceQ(chat):
   if RealTimeResponce:
     text_to_voiceQ.put(RealTimeResponce)
 
+  text_to_voiceQ.put("【終了】") 
   print("\n")
 
 
@@ -139,6 +137,10 @@ def text_to_voice():
       else:
         speaker = 23 #ノーマル
 
+      if tag == "【終了】":
+        voiceQ.put(["", ""])
+        continue
+
       # 音声合成クエリの作成
       res1 = requests.post('http://127.0.0.1:50021/audio_query',params = {'text': text, 'speaker': speaker})
       # 音声合成データの作成
@@ -148,11 +150,11 @@ def text_to_voice():
       file_name = f"{temp_path}/{str(time.time())}.wav"
       with open(file_name, mode='wb') as f:
         f.write(res2.content)
-      voiceQ.put(file_name)
 
-      if tag == "【入力】":
-        with open(f"{temp_path}/input_message.txt", 'w', encoding='UTF-8', newline='\n') as f:
-          f.write(text + '\n')
+      if tag == "【入力】" :
+        text = "コメント: " + text + "\n"
+
+      voiceQ.put([file_name, text])          
 
 
 def speak():
@@ -162,15 +164,22 @@ def speak():
       if os.path.isfile(f"{temp_path}/thinking"):
         os.remove(f"{temp_path}/thinking")  
 
-      file_name = voiceQ.get()
-      winsound.PlaySound(file_name, winsound.SND_FILENAME)
-      os.remove(file_name)
+      file_name, text= voiceQ.get()
 
-    if os.path.isfile(f"{temp_path}/orc.txt") and textQ.qsize() == 0 and len(glob.glob('{temp_path}/*.wav')) == 0:
-      os.remove(f"{temp_path}/orc.txt")
+      # OBS上の字幕作成
+      if file_name and text:
+        with open(f"{temp_path}/subtitiles.txt", 'w', encoding='UTF-8', newline='\n') as f:
+          f.write(text) 
 
-    if os.path.isfile(f"{temp_path}/input_message.txt") and voiceQ.qsize() == 0 and len(glob.glob('{temp_path}/*.wav')) == 0:
-      os.remove(f"{temp_path}/input_message.txt")
+        winsound.PlaySound(file_name, winsound.SND_FILENAME)
+        os.remove(file_name)
+
+        # if os.path.isfile(f"{temp_path}/orc.txt") and textQ.qsize() == 0 and len(glob.glob(f"{temp_path}/*.wav")) == 0:
+        #   os.remove(f"{temp_path}/orc.txt")
+
+      else:
+        with open(f"{temp_path}/subtitiles.txt", 'w', encoding='UTF-8', newline='\n') as f:
+          f.write("")        
 
 
 def get_text_from_game():
@@ -194,6 +203,12 @@ def run():
   if args.game == True:
     thread_game_mode = threading.Thread(target=get_text_from_game, daemon=True)
     thread_game_mode.start()
+
+  if not args.debug:
+    from comment import live
+    live = live(commentQ, args.video_id)
+    thread_live = threading.Thread(target=live.get_comment, daemon=True)
+    thread_live.start()      
 
   speak()
 
